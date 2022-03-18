@@ -1,0 +1,34 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'azure-spn'
+    KeyVaultName: 'satya-MyKey'
+    SecretsFilter: 'Mypassword'
+    RunAsPreJob: false
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'azure-spn'
+    subscriptionId: '5c42db16-9e6e-4438-a13e-3f57afe7b0f7'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'terraform-rg'
+    location: 'West US'
+    templateLocation: 'Linked artifact'
+    csmFile: 'azuredeploy.json'
+    csmParametersFile: 'azuredeployparameter.json'
+    overrideParameters: '-adminPassword $(Mypassword)'
+    deploymentMode: 'Incremental'
+    deploymentName: 'simpldeployment'
